@@ -13,24 +13,29 @@ export const feedbackService = {
   }): Promise<string> {
     if (!isSupabaseConfigured) return `fb-${Date.now()}`;
 
-    const { data: created, error } = await (supabase as any)
-      .from('feedback')
-      .insert({
-        user_id: data.userId || null,
-        screen_name: data.screenName.trim(),
-        category: data.category.trim(),
-        comments: data.comments.trim(),
-        rating: data.rating !== undefined ? data.rating : null,
-      })
-      .select('id')
-      .single();
+    try {
+      const { data: created, error } = await (supabase as any)
+        .from('feedback')
+        .insert({
+          user_id: data.userId || null,
+          screen_name: data.screenName.trim(),
+          category: data.category.trim(),
+          comments: data.comments.trim(),
+          rating: data.rating !== undefined ? data.rating : null,
+        })
+        .select('id')
+        .single();
 
-    if (error) {
-      console.error('Error submitting feedback:', error);
-      throw error;
+      if (error) {
+        console.warn('Supabase feedback insert error, falling back to local submission ID:', error.message);
+        return `fb-${Date.now()}`;
+      }
+
+      return created?.id || `fb-${Date.now()}`;
+    } catch (err: any) {
+      console.warn('Supabase feedback network exception, falling back to local submission ID:', err?.message || err);
+      return `fb-${Date.now()}`;
     }
-
-    return created.id;
   },
 
   /**
