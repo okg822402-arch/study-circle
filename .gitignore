@@ -61,3 +61,5 @@ Thumbs.db
 .vite/
 .turbo/
 .cache/
+
+.vercel
